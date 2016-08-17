@@ -1,7 +1,7 @@
 #mysql 
 import re
 from soupclass8 import C_sort,r_csv
-
+import csv
 print("mysql.connector.connect(user='username', password='passsword', host='127.0.0.1', database='database_name'")
 class Db_mngmnt(object):
 	def __init__(self, user, password, database):
