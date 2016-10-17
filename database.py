@@ -5,14 +5,14 @@ from soupclass8 import C_sort,r_csv
 print("mysql.connector.connect(user='username', password='passsword', host='127.0.0.1', database='database_name'")
 class Db_mngmnt(object):
 	def __init__(self, user, password, database):
-		user = self.user
-		password = self.password
-		database = self.database
+		self.user = user 
+		self.password = password
+		self.database = database
 	
 	def login(self):
-	cnx = mysql.connector.connect(user=self.user, password=self.password, host='127.0.0.1', database=self.database)
-	cursor = cnx.cursor(buffered = True)
-	return cursor
+		cnx = mysql.connector.connect(user=self.user, password=self.password, host='127.0.0.1', database=self.database)
+		cursor = cnx.cursor(buffered = True)
+		return cursor
 
 	def import_data(self, fname):
 		info = C_sort(fname)
@@ -43,6 +43,13 @@ class Db_mngmnt(object):
 		#print(command)
 			results.append(command)
 		return results
+	def row_insert_single(self, table_name, x, database = ''):
+		values = ['"' + str(x[i]) + '"' for i in range(0, len(x))]
+		if database == '':
+			command = "INSERT INTO {0} VALUES ({1})".format(table_name, ", ".join(values))
+		else:
+			command = "INSERT INTO {0}.{1} VALUES ({2})".format(database, table_name, ", ".join(values))
+		return command
 
 
 
@@ -56,4 +63,5 @@ class Db_mngmnt(object):
 
 
 
+test = Db_mngmnt('test','test','test')
 
