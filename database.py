@@ -2,12 +2,17 @@
 import re
 from soupclass8 import C_sort,r_csv
 import csv
+import mysql.connector
+
 print("mysql.connector.connect(user='username', password='passsword', host='127.0.0.1', database='database_name'")
 class Db_mngmnt(object):
-	def __init__(self, user, password, database):
+	def __init__(self, user, password, database, host = '127.0.0.1' ):
 		self.user = user 
 		self.password = password
 		self.database = database
+		self.host = host
+		self.con = login(self.user, self.password, self.database, self.host)
+		self.cursor = self.con.cursor(buffered = True)
 	
 	def login(self):
 		cnx = mysql.connector.connect(user=self.user, password=self.password, host='127.0.0.1', database=self.database)
@@ -50,18 +55,50 @@ class Db_mngmnt(object):
 		else:
 			command = "INSERT INTO {0}.{1} VALUES ({2})".format(database, table_name, ", ".join(values))
 		return command
+	def batch_row_insert_main(self, table_name, x, database = ''):
+		values = []
+		for i in range(0, len(x)):
+			values.append(self.batch_row_insert_form(x[i]))
+
+		if database == '':
+			command = "INSERT INTO {0} VALUES ({1})".format(table_name, ", ".join(values))
+		else:
+			command = "INSERT INTO {0}.{1} VALUES ({2})".format(database, table_name, ", ".join(values))
+		self.cursor.execute(command)
+		self.con.commit()
+		return command
+
+	def batch_row_insert_form(self, x):
+		values_r = ['"' + str(x[i]) + '"' for i in range(0, len(x))]
+		values = "({0})".format(", ".join(values_r))
+		return values
+	def query(self, x):
+		self.cursor.execute(x)
+		rows = self.cursor.fetchall()
+		return rows
 
 
 
 
 
 
+def login(user, password, database = '', host= '127.0.0.1'):
+	cnx = mysql.connector.connect(user=user, password=password, host=host, database=database)
+	#cursor = cnx.cursor(buffered = True)
+	return cnx
 
 
 
 
 
 
+test_list = ['test1','test2', 'test3', 'test4' , 'test5']
+test_list2 = [['test1','test2', 'test3', 'test4' , 'test5'], ['test1','test2', 'test3', 'test4' , 'test5'], 
+['test1','test2', 'test3', 'test4' , 'test5'], ['test1','test2', 'test3', 'test4' , 'test5']]
 
-test = Db_mngmnt('test','test','test')
+'''test = Db_mngmnt('test','test','test')
+print("Testing batch_row_insert_form method")
+test.batch_row_insert_form(test_list)
+print("Testing batch_row_insert_main")
+test.batch_row_insert_main("test", test_list2)'''
 
