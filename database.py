@@ -11,7 +11,7 @@ class Db_mngmnt(object):
 		self.password = password
 		self.database = database
 		self.host = host
-		self.con = login(self.user, self.password, self.database, self.host)
+		self.con = login(self.user, self.password, self.host)
 		self.cursor = self.con.cursor(buffered = True)
 	
 	def login(self):
@@ -48,22 +48,32 @@ class Db_mngmnt(object):
 		#print(command)
 			results.append(command)
 		return results
+	def row_insert_single_batch(self, table_name, x, database=''):
+		for i in range(0, len(x)):
+			command = self.row_insert_single(table_name, x[i], database)
+			"Inserting \" {0} \" now.".format(command)
+			self.cursor.execute(command)
+		self.con.commit()
+		return
+
 	def row_insert_single(self, table_name, x, database = ''):
-		values = ['"' + str(x[i]) + '"' for i in range(0, len(x))]
+		values = ['"' + string_cleanse(str(x[i])) + '"' for i in range(0, len(x))]
 		if database == '':
 			command = "INSERT INTO {0} VALUES ({1})".format(table_name, ", ".join(values))
 		else:
 			command = "INSERT INTO {0}.{1} VALUES ({2})".format(database, table_name, ", ".join(values))
 		return command
-	def batch_row_insert_main(self, table_name, x, database = ''):
+	def batch_row_insert_main(self, table_name, x, columns, database = ''):
 		values = []
 		for i in range(0, len(x)):
 			values.append(self.batch_row_insert_form(x[i]))
+		columns =  [re.sub(' ', '_', columns[i]) for i in range(0, len(columns))]
+
 
 		if database == '':
-			command = "INSERT INTO {0} VALUES ({1})".format(table_name, ", ".join(values))
+			command = "INSERT INTO {0} ({1}) VALUES {2}".format(table_name,", ".join(columns), ", ".join(values))
 		else:
-			command = "INSERT INTO {0}.{1} VALUES ({2})".format(database, table_name, ", ".join(values))
+			command = "INSERT INTO {0}.{1} ({2}) VALUES {3}".format(database, table_name, ", ".join(columns), ", ".join(values))
 		self.cursor.execute(command)
 		self.con.commit()
 		return command
@@ -79,11 +89,14 @@ class Db_mngmnt(object):
 
 
 
-
+def string_cleanse(x):
+	new = re.sub('"', '', x)
+	new2 = re.sub("'", '', new)
+	return new2
 
 
 def login(user, password, database = '', host= '127.0.0.1'):
-	cnx = mysql.connector.connect(user=user, password=password, host=host, database=database)
+	cnx = mysql.connector.connect(user=user, password=password, host=host)
 	#cursor = cnx.cursor(buffered = True)
 	return cnx
 
